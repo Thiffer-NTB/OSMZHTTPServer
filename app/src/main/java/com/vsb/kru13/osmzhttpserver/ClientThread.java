@@ -1,5 +1,6 @@
 package com.vsb.kru13.osmzhttpserver;
 
+import android.hardware.camera2.CameraAccessException;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -17,7 +18,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.Socket;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.Semaphore;
 
 
@@ -35,9 +39,11 @@ public class ClientThread extends Thread {
     }
 
     public static String checkIndex(File[] files) {
-        for (File file : files) {
-            if (file.getAbsolutePath().endsWith("index.html")) {
-                return file.getAbsolutePath();
+        if(files != null){
+            for (File file : files) {
+                if (file.getAbsolutePath().endsWith("index.html")) {
+                    return file.getAbsolutePath();
+                }
             }
         }
         return "";
@@ -95,10 +101,13 @@ public class ClientThread extends Thread {
             String[] sp;
             String methodType = "";
             String pathFile = "";
+            String cgiURI = "/cgi-bin";
+            String cameraURI = "/camera/snapshot";
 
 
             String tmp = in.readLine();
-            if(tmp !=null && !tmp.isEmpty()) {
+            if(tmp != null){
+            if(!tmp.isEmpty()) {
                 sp = tmp.split(" ");
                 methodType = sp[0];
                 pathFile = sp[1] == null ? "/" : sp[1];
@@ -108,17 +117,57 @@ public class ClientThread extends Thread {
                     Log.d("HTTP", "REQUEST : " + tmp);
                     tmp = in.readLine();
                 }
-
-
             }
 
+                if(pathFile.contains("/cgi-bin")) {
+                    String command = pathFile.substring(9);
+                    String[] commands = command.split("%20");
+                    if (commands.length > 0) {
+                        out.flush();
+                        out.write("HTTP/1.0 200 OK\n" +
+                                "Content-Type: text/plain\n"
+                                + "\n");
+                        out.flush();
+                        ArrayList<String> arguments = new ArrayList<String>();
+                        arguments.addAll(Arrays.asList(commands));
+                        ProcessBuilder processBuilder = new ProcessBuilder(arguments);
+                        Process process = processBuilder.start();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()), 1);
 
+                        int part = 0;
+                        while ((part = reader.read()) != -1) {
+                            o.write(part);
+                        }
+                        o.flush();
+                        process.destroy();
+
+                    }
+                }
+
+
+                if(pathFile.equals("/camera/snapshot")){
+
+                    if(CamActivity.getImageData() != null) {
+
+                        out.flush();
+                        out.write("HTTP/1.0 200 OK\n" +
+                                "Content-Type: image/jpeg\n"
+                                + "\n");
+                        out.flush();
+                        dataOut.write(CamActivity.getImageData());
+                        dataOut.flush();
+                    }
+                }
+
+
+
+            if(!pathFile.contains(cameraURI) || !pathFile.contains(cgiURI)){
             String sdPath = Environment.getExternalStorageDirectory().getAbsolutePath();
             File f = new File(sdPath + pathFile);
             String type = getContentType(f.getAbsolutePath());
             int fileLength;
             out.flush();
-            if(!f.exists()){
+            if(!f.exists() && !pathFile.contains(cgiURI)){
                 out.write("HTTP/1.0 404 Not found\n" +
                             "Content-Type: text/html\n" +
                             "Content-Length: " + f.length() + "\n" +
@@ -126,6 +175,7 @@ public class ClientThread extends Thread {
                             "<html>\n" +
                             "<body>\n" +
                             "<h1>404</h1></body></html>");
+                out.flush();
                 sendInfo(methodType, pathFile, f.length());
 
             }
@@ -147,7 +197,7 @@ public class ClientThread extends Thread {
                     File[] folderContent = new File(f.getAbsolutePath()).listFiles();
                     String path = checkIndex(folderContent);
                     File index = new File(path);
-                    if(path.equals("")){
+                    if(path.equals("") && folderContent != null){
                         fileLength = (int) f.length();
                         out.write("HTTP/1.0 200 OK\n" +
                                     "Content-Type: text/html\n" +
@@ -177,8 +227,11 @@ public class ClientThread extends Thread {
                     }
                 }
             }
-
                 out.flush();
+            }
+
+            }
+
                 s.close();
                 Log.d("ClientThread", "Socket Closed");
             }

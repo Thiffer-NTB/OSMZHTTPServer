@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -58,8 +59,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         Button btn1 = (Button)findViewById(R.id.button1);
         Button btn2 = (Button)findViewById(R.id.button2);
+        Button cameraActivBtn = (Button)findViewById(R.id.cam);
+        cameraActivBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(getBaseContext(), CamActivity.class));
+            }
+        });
         btn1.setOnClickListener(this);
         btn2.setOnClickListener(this);
+
 
 
 
@@ -79,8 +88,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             } else {
                 EditText thread = (EditText) findViewById(R.id.thread);
                 int maxThreads = Integer.valueOf(thread.getText().toString());
+                if(thread.getText().toString().isEmpty()){
+                    Toast.makeText(this,"Number of threads: ", Toast.LENGTH_LONG).show();
+                }
                 if(maxThreads < 1){
-                    Toast.makeText(this, "Bad threads value or not specified", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Bad threads value", Toast.LENGTH_LONG).show();
                 }
                 else {
                     Toast.makeText(this, "Server started with " + maxThreads + " threads.", Toast.LENGTH_LONG).show();
