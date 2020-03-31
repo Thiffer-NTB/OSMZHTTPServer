@@ -23,4 +23,28 @@
         android:layout_marginBottom="12dp">
     </Button>
 
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stcamera"
+        android:text="Stop Camera"
+        android:layout_marginBottom="12dp">
+    </Button>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/stream"
+        android:text="Start Streaming"
+        android:layout_marginBottom="12dp">
+    </Button>
+
+    <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/streamst"
+        android:text="Stop Streaming"
+        android:layout_marginBottom="12dp">
+    </Button>
+
 </LinearLayout>

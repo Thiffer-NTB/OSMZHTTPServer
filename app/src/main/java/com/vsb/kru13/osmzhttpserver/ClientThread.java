@@ -118,7 +118,7 @@ public class ClientThread extends Thread {
                     tmp = in.readLine();
                 }
             }
-
+                //HTTP response pro CGI scripting
                 if(pathFile.contains("/cgi-bin")) {
                     String command = pathFile.substring(9);
                     String[] commands = command.split("%20");
@@ -144,7 +144,7 @@ public class ClientThread extends Thread {
                     }
                 }
 
-
+                //HTTP response pro /camera/snapshot
                 if(pathFile.equals("/camera/snapshot")){
 
                     if(CamActivity.getImageData() != null) {
@@ -156,6 +156,26 @@ public class ClientThread extends Thread {
                         out.flush();
                         dataOut.write(CamActivity.getImageData());
                         dataOut.flush();
+                    }
+                }
+                //HTTP response pro /camera/stream
+                if (pathFile.equals("/camera/stream")) {
+
+                    if (CamActivity.getImageData() != null) {
+                        out.flush();
+                        out.write("HTTP/1.0 200 OK\n" +
+                                "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
+                        while (CamActivity.isStreaming()) {
+                            out.flush();
+                            out.write("--OSMZ_boundary\n" +
+                                    "Content-Type: image/jpeg\n\n");
+                            out.flush();
+                            dataOut.write(CamActivity.getImageData());
+                            dataOut.flush();
+                        }
+                        dataOut.flush();
+                        out.write("--OSMZ_boundary");
+                        out.flush();
                     }
                 }
 

@@ -31,18 +31,17 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
 
-        Camera.Parameters parameters = mCamera.getParameters();
-
+        Camera.Parameters param = mCamera.getParameters();
         if(this.getResources().getConfiguration().orientation != Configuration.ORIENTATION_LANDSCAPE){
-            parameters.set("orientation", "portrait");
+            param.set("orientation", "portrait");
             mCamera.setDisplayOrientation(90);
-            parameters.setRotation(90);
+            param.setRotation(90);
         }else{
-            parameters.set("orientation", "landscape");
+            param.set("orientation", "landscape");
             mCamera.setDisplayOrientation(0);
-            parameters.setRotation(0);
+            param.setRotation(0);
         }
-        mCamera.setParameters(parameters);
+        mCamera.setParameters(param);
         try {
             mCamera.setPreviewDisplay(holder);
             mCamera.startPreview();
@@ -55,13 +54,16 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 
     @Override
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        Camera.Parameters parameters = mCamera.getParameters();
+        parameters.setPreviewSize(width, height);
         mCamera.startPreview();
         isSafe = true;
     }
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-
+        mCamera.stopPreview();
+        mCamera = null;
     }
 
 }
